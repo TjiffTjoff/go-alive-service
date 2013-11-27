@@ -9,9 +9,9 @@ import (
 var srvLog service.Logger
 
 func main() {
-  var name = "GoServiceTest"
-  var displayName = "Go Service Test"
-  var desc = "This is a test Go service.  It is designed to run well."
+  var name = "GoSensuKeepalive"
+  var displayName = "Sensu keepalive client in Go"
+  var desc = "Sends keepalive messages to Sensu server."
 
   var s, err = service.NewService(name, displayName, desc)
   srvLog = s
@@ -73,9 +73,9 @@ func main() {
 }
 
 func doWork() {
-  srvLog.Info("I'm Running!")
+  srvLog.Info("Service started")
   sensu()
 }
 func stopWork() {
-  srvLog.Info("I'm Stopping!")
+  srvLog.Info("Service stopped")
 }

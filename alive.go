@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-  "log"
-  "path/filepath"
+	"log"
+	"path/filepath"
 )
 
 // Structs to hold client and rabbitmq configuration
@@ -170,13 +170,19 @@ func sendKeepAlive(channel *amqp.Channel, client ClientConfig) error {
 func sensu() {
 
   workingDir := filepath.Dir(os.Args[0])
-  logFile, _ := os.OpenFile(workingDir+"/alive.log", os.O_RDWR|os.O_CREATE, 0755)
+  logFile, err := os.OpenFile(workingDir+"/alive.log", os.O_APPEND|os.O_CREATE, 0755)
+  if err != nil {
+    srvLog.Info("Could not open logfile, exiting")
+    stopWork()
+  }
+
   log.SetOutput(logFile)
 
 	// Get client and rabbitmq configuration
 	client, rabbitmq, err := parseConfig(workingDir)
 	if err != nil {
 		log.Printf("Configuration: %s \n", err)
+		stopWork()
 		os.Exit(1)
 	}
 
@@ -184,6 +190,7 @@ func sensu() {
 	conn, err := connect(rabbitmq.Host, rabbitmq.Port, rabbitmq.User, rabbitmq.Password, rabbitmq.Vhost)
 	if err != nil {
 		log.Printf("Connection: %s \n", err)
+		stopWork()
 		os.Exit(1)
 	}
 
@@ -191,6 +198,7 @@ func sensu() {
 	keepAliveChannel, err := channel(conn, "keepalives")
 	if err != nil {
 		log.Printf("Channel: %s \n", err)
+		stopWork()
 		os.Exit(1)
 	}
 
@@ -199,6 +207,7 @@ func sensu() {
 		log.Println("Sending keepalive")
 		if err := sendKeepAlive(keepAliveChannel, client); err != nil {
 			log.Printf("Keepalive: %s \n", err)
+			stopWork()
 			os.Exit(1)
 		}
 		time.Sleep(60 * time.Second)
